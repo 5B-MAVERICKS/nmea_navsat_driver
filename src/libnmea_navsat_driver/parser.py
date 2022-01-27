@@ -141,13 +141,85 @@ parse_maps = {
         ("speed", convert_knots_to_mps, 5)
     ]
 }
+"""
+http://www.trimble.com/oem_receiverhelp/v4.44/en/NMEA-0183messages_MessageOverview.html
+https://www.sparkfun.com/datasheets/GPS/NMEA%20Reference%20Manual1.pdf
+A more comprehensive parsing map
+parse_maps = {
+    "GGA": [
+        ("utc_time", convert_time, 1),
+        ("latitude", convert_latitude, 2),
+        ("latitude_direction", str, 3),
+        ("longitude", convert_longitude, 4),
+        ("longitude_direction", str, 5),
+        ("fix_type", int, 6),
+        ("num_satellites", safe_int, 7),
+        ("hdop", safe_float, 8),
+        ("altitude", safe_float, 9),
+        ("mean_sea_level", safe_float, 11),
+        ],
+    "GST": [
+        ("utc_time", convert_time, 1),
+        ("ellipse_sigma_major", safe_float, 3),
+        ("ellipse_sigma_minor", safe_float, 4),
+        ("ellipse_sigma_ori", safe_float, 5),
+        ("latitude_sigma", safe_float, 6),
+        ("longitude_sigma", safe_float, 7),
+        ("altitude_sigma", safe_float, 8),
+        ],
+    "RMC": [
+        ("utc_time", convert_time, 1),
+        ("fix_valid", convert_status_flag, 2),
+        ("latitude", convert_latitude, 3),
+        ("latitude_direction", str, 4),
+        ("longitude", convert_longitude, 5),
+        ("longitude_direction", str, 6),
+        ("speed", convert_knots_to_mps, 7),
+        ("true_course", convert_deg_to_rads, 8),
+        ],
+    "VTG": [
+        ("ori_true", convert_deg_to_rads, 1),
+        ("ori_magnetic", convert_deg_to_rads, 3),
+        ("speed", convert_knots_to_mps, 5),
+        ],
+    "GSV": [
+        ("message_total", safe_int, 1),
+        ("message_number", safe_int, 2),
+        ("sat_in_view", safe_int, 3),
+        ("sat_01_id", safe_int, 4),
+        ("sat_01_elivation", convert_deg_to_rads, 5),
+        ("sat_01_azimuth", convert_deg_to_rads, 6),
+        ("sat_01_snr", safe_float, 7),
+        ("sat_02_id", safe_int, 8),
+        ("sat_02_elivation", convert_deg_to_rads, 9),
+        ("sat_02_azimuth", convert_deg_to_rads, 10),
+        ("sat_02_snr", safe_float, 11),
+        ("sat_03_id", safe_int, 12),
+        ("sat_03_elivation", convert_deg_to_rads, 13),
+        ("sat_03_azimuth", convert_deg_to_rads, 14),
+        ("sat_03_snr", safe_float, 15),
+        ("sat_04_id", safe_int, 16),
+        ("sat_04_elivation", convert_deg_to_rads, 17),
+        ("sat_04_azimuth", convert_deg_to_rads, 18),
+        ("sat_04_snr", safe_float, 19),
+        ],
+    "GSA": [
+        ("mode", str, 1),
+        ("fix_type", safe_int, 2),
+        ("sat_id", safe_int, 3),
+        ("pdop", safe_float, 4),
+        ("hdop", safe_float, 5),
+        ("vdop", safe_float, 6)
+        ]
+    }
+"""
 
 
-def parse_nmea_sentence(nmea_sentence):
+def parse_nmea_sentence(driver, nmea_sentence):
     # Check for a valid nmea sentence
 
     if not re.match(r'(^\$GP|^\$GN|^\$GL|^\$IN).*\*[0-9A-Fa-f]{2}$', nmea_sentence):
-        logger.debug("Regex didn't match, sentence not valid NMEA? Sentence was: %s"
+        driver.get_logger().info("Regex didn't match, sentence not valid NMEA? Sentence was: %s"
                      % repr(nmea_sentence))
         return False
     fields = [field.strip(',') for field in nmea_sentence.split(',')]
@@ -156,7 +228,7 @@ def parse_nmea_sentence(nmea_sentence):
     sentence_type = fields[0][3:]
 
     if sentence_type not in parse_maps:
-        logger.debug("Sentence type %s not in parse map, ignoring."
+        driver.get_logger().info("Sentence type %s not in parse map, ignoring."
                      % repr(sentence_type))
         return False
 

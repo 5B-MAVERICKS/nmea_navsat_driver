@@ -125,7 +125,7 @@ class Ros2NMEADriver(Node):
                                    "Sentence was: %s" % nmea_string)
             return False
 
-        parsed_sentence = parser.parse_nmea_sentence(nmea_string)
+        parsed_sentence = parser.parse_nmea_sentence(self,nmea_string)
         if not parsed_sentence:
             self.get_logger().debug("Failed to parse NMEA sentence. Sentence was: %s" % nmea_string)
             return False

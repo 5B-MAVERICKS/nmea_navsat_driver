@@ -61,10 +61,10 @@ def main(args=None):
     while rclpy.ok():
         try:
             # Create a socket
-            socket_ = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+            socket_ = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
             # Bind the socket to the port
-            socket_.bind((local_ip, local_port))
+            socket_.connect((local_ip, local_port))
 
             # Set timeout
             socket_.settimeout(timeout)
@@ -79,6 +79,7 @@ def main(args=None):
 
                 # strip the data
                 data_list = data.decode("ascii").strip().split("\n")
+                data_list = [str_clean.strip() for str_clean in data_list]
 
                 for data in data_list:
 
